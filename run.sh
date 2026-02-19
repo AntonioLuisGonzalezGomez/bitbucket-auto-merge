@@ -10,8 +10,8 @@ IMAGE_NAME="bitbucket-auto-merge"
 # CONFIGURATION SECTION
 # ----------------------------
 
-BASE_URL="https://bitbucket.oberthur.com"
-PROJECT="OTAP"
+BASE_URL="https://bitbucket.company.com"
+PROJECT="BASE_PROJECT"
 USERNAME="your_username"
 PASSWORD="your_password"
 TARGET_BRANCH="develop"
