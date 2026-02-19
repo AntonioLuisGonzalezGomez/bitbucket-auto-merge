@@ -93,7 +93,7 @@ From the project root:
 ## ▶️ Run the Container Manually
 
 ```
-docker run --rm \
+docker run --rm --network=host \
   -e BASE_URL="https://bitbucket.company.com" \
   -e PROJECT="MYPROJECT" \
   -e USERNAME="john.doe" \
@@ -142,15 +142,17 @@ This container can be executed from:
 
 Example cron execution:
 
-`0 */2 * * * /path/to/run.sh >> merge.log 2>&1`
+`0 */2 * * * /path/to/run.sh BRANCH_99564 >> merge.log 2>&1`
 
 ## 📦 Dependencies Inside Docker
 
 The container installs:
 
+- bash
 - curl
 - jq
 - ca-certificates
+- libc6-compat
 - Alpine 3.18 base image
 
 No external runtime dependencies required.
