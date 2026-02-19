@@ -1,21 +1,16 @@
-# Use Alpine Linux as lightweight base
+# Lightweight Docker image for Bitbucket Auto PR Merge
 FROM alpine:3.18
 
-# Install required packages: bash, curl, jq, ca-certificates
+# Install required packages
 RUN apk add --no-cache \
     bash \
     curl \
     jq \
     ca-certificates
 
-# Set working directory
 WORKDIR /app
 
-# Copy the script
 COPY auto-merge.sh /app/auto-merge.sh
-
-# Make script executable
 RUN chmod +x /app/auto-merge.sh
 
-# Set the entrypoint to the script
 ENTRYPOINT ["/app/auto-merge.sh"]

@@ -16,7 +16,7 @@ This tool is designed for enterprise environments where multiple repositories ne
     - Author (username)
     - Source branch
     - Target branch
-- Automatically merges PRs with **2 or more approvals**
+- Automatically merges PRs with a configurable number of approvals
 - Fully Dockerized (portable across environments)
 - Fully configurable via environment variables
 - No host dependencies required (except Docker)
@@ -48,6 +48,8 @@ All runtime configuration is handled through environment variables.
 | `TARGET_BRANCH` | Target branch (e.g. `develop`) |
 | `SOURCE_BRANCH` | Source branch to filter PRs |
 | `REPOS`         | Comma-separated repository list |
+| `MIN_APPROVALS` | Minimum number of approvals required to merge a PR (default: 2) |
+
 
 Example:
 
@@ -59,6 +61,7 @@ PASSWORD="mySecurePassword"
 TARGET_BRANCH="develop"
 SOURCE_BRANCH="feature_branch"
 REPOS="repo1,repo2,repo3"
+MIN_APPROVALS=2
 ```
 
 
@@ -74,7 +77,7 @@ For each repository:
     - Created by `USERNAME`
     - From `SOURCE_BRANCH`
 3. Counts approvals
-4. If approvals ≥ 2:
+4. If approvals ≥ `MIN_APPROVALS`:
     - Checks mergeability (no conflicts, no vetoes)
     - Executes merge via REST API
 
@@ -98,6 +101,7 @@ docker run --rm \
   -e TARGET_BRANCH="develop" \
   -e SOURCE_BRANCH="feature_branch" \
   -e REPOS="repo1,repo2,repo3" \
+  -e MIN_APPROVALS=2 \
   bitbucket-auto-merge
 ```
 
@@ -119,7 +123,7 @@ Enterprise scenario:
 - 25 repositories
 - Multiple teams working in parallel
 - All PRs from `feature_parallel_execution`
-- Automatically merge to develop when 2 approvals are reached
+- Automatically merge to `develop` when `MIN_APPROVALS` approvals are reached
 - This tool removes the need for manual merge operations across multiple repositories.
 
 ⚠ Do NOT store plaintext passwords in version control. Consider using environment variables, Docker secrets, or Bitbucket App Passwords.

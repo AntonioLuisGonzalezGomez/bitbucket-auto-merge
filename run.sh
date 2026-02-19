@@ -18,6 +18,9 @@ TARGET_BRANCH="develop"
 SOURCE_BRANCH="PARALLEL_EXECUTION"
 REPOS="api-gateway,audit,auth,devices,notifications"
 
+# Minimum approvals required to merge
+MIN_APPROVALS=2
+
 # ----------------------------
 # BUILD DOCKER IMAGE
 # ----------------------------
@@ -39,4 +42,5 @@ docker run --rm \
   -e TARGET_BRANCH="$TARGET_BRANCH" \
   -e SOURCE_BRANCH="$SOURCE_BRANCH" \
   -e REPOS="$REPOS" \
+  -e MIN_APPROVALS="$MIN_APPROVALS" \
   $IMAGE_NAME

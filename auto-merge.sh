@@ -3,11 +3,9 @@
 # --------------------------------------------------
 # Bitbucket Automatic PR Merge Script
 # --------------------------------------------------
-# This script:
-# - Connects to Bitbucket Server REST API
-# - Filters open PRs created by a specific user
-# - Filters by source and target branches
-# - Merges PRs with 2 or more approvals
+# Connects to Bitbucket Server REST API
+# Filters open PRs by user and branch
+# Merges PRs with configurable number of approvals
 # --------------------------------------------------
 
 # ----------------------------
@@ -31,10 +29,15 @@ if [ -z "$BASE_URL" ] || \
   echo "  TARGET_BRANCH"
   echo "  SOURCE_BRANCH"
   echo "  REPOS (comma-separated list)"
+  echo "Optional:"
+  echo "  MIN_APPROVALS (default: 2)"
   exit 1
 fi
 
 AUTH="$USERNAME:$PASSWORD"
+
+# Default minimum approvals if not set
+MIN_APPROVALS="${MIN_APPROVALS:-2}"
 
 IFS=',' read -ra REPO_ARRAY <<< "$REPOS"
 
@@ -87,10 +90,10 @@ for REPO in "${REPO_ARRAY[@]}"; do
 
     APPROVED=$(echo "$DETAILS" | jq '[.reviewers[] | select(.approved == true)] | length')
 
-    if [ "$APPROVED" -ge 2 ]; then
+    if [ "$APPROVED" -ge "$MIN_APPROVALS" ]; then
       merge_pr "$REPO" "$PR"
     else
-      echo "PR #$PR in repository $REPO has $APPROVED approvals. At least 2 required."
+      echo "PR #$PR in repository $REPO has $APPROVED approvals. At least $MIN_APPROVALS required."
     fi
   done
 done
