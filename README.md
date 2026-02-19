@@ -21,17 +21,6 @@ This tool is designed for enterprise environments where multiple repositories ne
 - Fully configurable via environment variables
 - No host dependencies required (except Docker)
 
----
-
-## 🏗 Project Structure
-
-bitbucket-auto-merge/
-│
-├── Dockerfile
-├── auto-merge.sh
-├── run.sh
-└── README.md
-
 
 ---
 
