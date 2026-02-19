@@ -1,4 +1,3 @@
-# Lightweight Alpine image for Bitbucket Auto Merge
 FROM alpine:3.18
 
 # Install dependencies: bash, curl, jq, ca-certificates, and compatibility libraries
