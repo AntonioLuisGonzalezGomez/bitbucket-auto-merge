@@ -137,28 +137,28 @@ bitbucket-auto-merge delete feature_branch
 
 ---
 
-## 🧾 Using the Provided bbtoolrunner.sh
+## 🧾 Using the Provided bbtool-local.sh
 
 The helper script now supports both modes.
 
 ### Usage
 ```
-chmod +x bbtoolrunner.sh
-./bbtoolrunner.sh merge FEATURE_X
+chmod +x bbtool-local.sh
+./bbtool-local.sh merge FEATURE_X
 ```
 
 or
 
 ```
-./bbtoolrunner.sh delete FEATURE_X
+./bbtool-local.sh delete FEATURE_X
 ```
 ### Script Parameters
-bbtoolrunner.sh <merge|delete> <source-branch>
+bbtool-local.sh <merge|delete> <source-branch>
 
 Example:
 ```
-./bbtoolrunner.sh merge PARALLEL_EXECUTION
-./bbtoolrunner.sh delete PARALLEL_EXECUTION
+./bbtool-local.sh merge PARALLEL_EXECUTION
+./bbtool-local.sh delete PARALLEL_EXECUTION
 ```
 
 ---
@@ -174,11 +174,11 @@ Workflow:
 
 1. Run:
 ```
-./bbtoolrunner.sh merge feature_parallel_execution
+./bbtool-local.sh merge feature_parallel_execution
 ```
 2. After verification:
 ```
-./bbtoolrunner.sh delete feature_parallel_execution
+./bbtool-local.sh delete feature_parallel_execution
 ```
 This removes the need for manual PR merges and manual branch cleanup across dozens of repositories.
 
@@ -194,11 +194,11 @@ This container can be executed from:
 
 Example cron job:
 ```
-0 */2 * * * /path/to/bbtoolrunner.sh merge BRANCH_99564 >> merge.log 2>&1
+0 */2 * * * /path/to/bbtool-local.sh merge BRANCH_99564 >> merge.log 2>&1
 ```
 Or for cleanup:
 ```
-0 3 * * * /path/to/bbtoolrunner.sh delete OLD_FEATURE_BRANCH >> cleanup.log 2>&1
+0 3 * * * /path/to/bbtool-local.sh delete OLD_FEATURE_BRANCH >> cleanup.log 2>&1
 ```
 
 ---
