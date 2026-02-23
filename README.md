@@ -102,6 +102,7 @@ docker run --rm --network=host \
   -e SOURCE_BRANCH="feature_branch" \
   -e REPOS="repo1,repo2,repo3" \
   -e MIN_APPROVALS=2 \
+  -e DELETE_SOURCE_BRANCH=true \
   bitbucket-auto-merge
 ```
 

@@ -6,6 +6,7 @@
 # Connects to Bitbucket Server REST API
 # Filters open PRs by user and branch
 # Merges PRs with configurable number of approvals
+# Optionally deletes source branch after merge
 # --------------------------------------------------
 
 # ----------------------------
@@ -31,13 +32,15 @@ if [ -z "$BASE_URL" ] || \
   echo "  REPOS (comma-separated list)"
   echo "Optional:"
   echo "  MIN_APPROVALS (default: 2)"
+  echo "  DELETE_SOURCE_BRANCH (default: true)"
   exit 1
 fi
 
 AUTH="$USERNAME:$PASSWORD"
 
-# Default minimum approvals if not set
+# Optional variables with defaults
 MIN_APPROVALS="${MIN_APPROVALS:-2}"
+DELETE_SOURCE_BRANCH="${DELETE_SOURCE_BRANCH:-true}"
 
 IFS=',' read -ra REPO_ARRAY <<< "$REPOS"
 

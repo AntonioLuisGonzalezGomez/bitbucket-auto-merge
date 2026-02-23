@@ -15,11 +15,13 @@ RUN update-ca-certificates
 # Set working directory
 WORKDIR /app
 
-# Copy the auto-merge script
+# Copy scripts
 COPY auto-merge.sh /app/auto-merge.sh
+COPY delete-branch.sh /app/delete-branch.sh
 
-# Make the script executable
-RUN chmod +x /app/auto-merge.sh
+# Make scripts executable
+RUN chmod +x /app/auto-merge.sh \
+    /app/delete-branch.sh
 
-# Entrypoint
+# Default entrypoint (auto-merge)
 ENTRYPOINT ["/app/auto-merge.sh"]
