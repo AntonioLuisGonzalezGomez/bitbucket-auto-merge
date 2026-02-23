@@ -1,22 +1,33 @@
-# Bitbucket Auto PR Merge (Dockerized)
+# Bitbucket Automation Tool (Dockerized)
 
-A portable and fully configurable Docker-based automation tool that connects to Bitbucket Server via REST API and automatically merges Pull Requests that meet defined approval criteria.
+A portable and fully configurable Docker-based automation tool that connects to Bitbucket Server via REST API and performs automated repository operations.
 
-This tool is designed for enterprise environments where multiple repositories need automated PR merging under controlled conditions.
+Supported operations:
+
+Automatic Pull Request merge
+
+Source branch deletion across repositories
+
+Designed for enterprise environments where multiple repositories require controlled automation.
+
+Compatible with Atlassian Bitbucket Server v7.21.7.
 
 ---
 
 ## 🚀 Features
 
 - Connects to Bitbucket Server REST API
-- Filters OPEN Pull Requests
-- Filters by:
-    - Project
-    - Repository list
-    - Author (username)
-    - Source branch
-    - Target branch
-- Automatically merges PRs with a configurable number of approvals
+- Supports two execution modes:
+  - merge → merges eligible PRs
+  - delete → deletes branches across repositories
+- Filters PRs by:
+  - Project
+  - Repository list
+  - Author (username)
+  - Source branch
+  - Target branch
+- Configurable minimum approvals
+- Automatic source branch deletion during merg
 - Fully Dockerized (portable across environments)
 - Fully configurable via environment variables
 - No host dependencies required (except Docker)
@@ -26,8 +37,9 @@ This tool is designed for enterprise environments where multiple repositories ne
 
 ## 🐳 Requirements
 
-- Docker (20+ recommended)
-- Linux (Alpine or any Linux distribution with Docker installed)
+- Docker 20+
+- Linux host (Alpine or any distribution with Docker installed)
+- Network access to Bitbucket Server
 
 No additional host dependencies are required.
 
@@ -35,7 +47,7 @@ No additional host dependencies are required.
 
 ## ⚙️ Configuration
 
-All runtime configuration is handled through environment variables.
+Runtime configuration is handled via environment variables.
 
 ### Required Variables
 
@@ -46,117 +58,177 @@ All runtime configuration is handled through environment variables.
 | `USERNAME`      | Bitbucket username (slug) |
 | `PASSWORD`      | Password or App Password |
 | `TARGET_BRANCH` | Target branch (e.g. `develop`) |
-| `SOURCE_BRANCH` | Source branch to filter PRs |
 | `REPOS`         | Comma-separated repository list |
+
+
+### Optional Variables
+
+| Variable        | Description |
+|----------------|-------------|
 | `MIN_APPROVALS` | Minimum number of approvals required to merge a PR (default: 2) |
 
-
-Example:
-
-```bash
-BASE_URL="https://bitbucket.company.com"
-PROJECT="MYPROJECT"
-USERNAME="john.doe"
-PASSWORD="mySecurePassword"
-TARGET_BRANCH="develop"
-SOURCE_BRANCH="feature_branch"
-REPOS="repo1,repo2,repo3"
-MIN_APPROVALS=2
-```
-
-
-
 ---
 
-## 🛠 How It Works
+
+## 🛠 Execution Modes
+
+The container supports two commands:
+```
+merge <source-branch>
+delete <source-branch>
+```
+
+## 🔀 MERGE MODE
+### What It Does
 
 For each repository:
-
-1. Retrieves OPEN Pull Requests targeting `TARGET_BRANCH`
+1. Retrieves OPEN PRs targeting TARGET_BRANCH
 2. Filters PRs:
-    - Created by `USERNAME`
-    - From `SOURCE_BRANCH`
+   - Created by USERNAME
+   - From <source-branch>
 3. Counts approvals
-4. If approvals ≥ `MIN_APPROVALS`:
-    - Checks mergeability (no conflicts, no vetoes)
-    - Executes merge via REST API
+4. If approvals ≥ MIN_APPROVALS:
+   - Checks mergeability (no conflicts, no vetoes)
+   - Executes merge
+   - Requests automatic source branch deletion
+
 
 ---
 
-## 🔧 Build the Docker Image
+## ▶️ Manual Merge Execution
 
-From the project root:
-
-`docker build -t bitbucket-auto-merge .`
-
-
-## ▶️ Run the Container Manually
-
-```
+```bash
 docker run --rm --network=host \
   -e BASE_URL="https://bitbucket.company.com" \
   -e PROJECT="MYPROJECT" \
   -e USERNAME="john.doe" \
   -e PASSWORD="mySecurePassword" \
   -e TARGET_BRANCH="develop" \
-  -e SOURCE_BRANCH="feature_branch" \
   -e REPOS="repo1,repo2,repo3" \
   -e MIN_APPROVALS=2 \
-  -e DELETE_SOURCE_BRANCH=true \
-  bitbucket-auto-merge
+  bitbucket-auto-merge merge feature_branch
 ```
 
-## 🧾 Using the Provided run.sh
+## 🗑 DELETE MODE
+### What It Does
 
-The project includes a helper script:
+For each repository:
+1. Checks if <source-branch> exists
+2. If it exists:
+   - Deletes the branch via REST API
+3. If it does not exist:
+    - Skips safely
+This mode is useful when:
+   - PRs were already merged
+   - You want to clean up feature branches across multiple repositories
+
+
+## ▶️ Manual Delete Execution
+```bash
+docker run --rm --network=host \
+-e BASE_URL="https://bitbucket.company.com" \
+-e PROJECT="MYPROJECT" \
+-e USERNAME="john.doe" \
+-e PASSWORD="mySecurePassword" \
+-e TARGET_BRANCH="develop" \
+-e REPOS="repo1,repo2,repo3" \
+bitbucket-auto-merge delete feature_branch
+```
+
+---
+
+## 🧾 Using the Provided bbtoolrunner.sh
+
+The helper script now supports both modes.
+
+### Usage
+```
+chmod +x bbtoolrunner.sh
+./bbtoolrunner.sh merge FEATURE_X
+```
+
+or
 
 ```
-chmod +x run.sh
-./run.sh
+./bbtoolrunner.sh delete FEATURE_X
+```
+### Script Parameters
+bbtoolrunner.sh <merge|delete> <source-branch>
 
+Example:
+```
+./bbtoolrunner.sh merge PARALLEL_EXECUTION
+./bbtoolrunner.sh delete PARALLEL_EXECUTION
 ```
 
-Edit the configuration section inside run.sh before executing.
+---
 
-## 🧪 Example Use Case
+## 🧪 Enterprise Example Use Case
 
-Enterprise scenario:
+Scenario:
 - 25 repositories
-- Multiple teams working in parallel
-- All PRs from `feature_parallel_execution`
-- Automatically merge to `develop` when `MIN_APPROVALS` approvals are reached
-- This tool removes the need for manual merge operations across multiple repositories.
+- Feature branch: feature_parallel_execution
+- All PRs target develop
 
-⚠ Do NOT store plaintext passwords in version control. Consider using environment variables, Docker secrets, or Bitbucket App Passwords.
+Workflow:
 
+1. Run:
+```
+./bbtoolrunner.sh merge feature_parallel_execution
+```
+2. After verification:
+```
+./bbtoolrunner.sh delete feature_parallel_execution
+```
+This removes the need for manual PR merges and manual branch cleanup across dozens of repositories.
 
 
 ## 🔄 CI/CD Integration Example
 
 This container can be executed from:
-
 - Jenkins
 - GitHub Actions
 - GitLab CI
 - Azure DevOps
 - Cron jobs
 
-Example cron execution:
+Example cron job:
+```
+0 */2 * * * /path/to/bbtoolrunner.sh merge BRANCH_99564 >> merge.log 2>&1
+```
+Or for cleanup:
+```
+0 3 * * * /path/to/bbtoolrunner.sh delete OLD_FEATURE_BRANCH >> cleanup.log 2>&1
+```
 
-`0 */2 * * * /path/to/run.sh BRANCH_99564 >> merge.log 2>&1`
+---
 
 ## 📦 Dependencies Inside Docker
 
 The container installs:
-
 - bash
 - curl
 - jq
 - ca-certificates
 - libc6-compat
+- openssl
 - Alpine 3.18 base image
 
 No external runtime dependencies required.
+
+---
+
+## 🔐 Security Notice
+
+⚠ Do NOT store plaintext passwords in version control.
+
+Recommended alternatives:
+- Environment variables injected by CI/CD
+- Docker secrets
+- Bitbucket App Passwords
+- Vault integrations
+
+---
 
 
 ## 📜 License
@@ -186,6 +258,6 @@ Antonio Luis González Gómez
 
 ## ⭐ Final Notes
 
-This tool is designed for internal enterprise automation scenarios where centralized PR merging across multiple repositories is required under strict approval conditions.
+This tool is designed for internal enterprise automation scenarios where centralized PR merging and branch lifecycle management across multiple repositories is required under strict approval conditions.
 
-For production-grade enhancements (parallel execution, logging, reporting, token-based auth, dry-run mode, etc.), consider extending the script accordingly.
+For production-grade enhancements (parallel execution, structured logging, reporting, token-based authentication, dry-run mode, Slack notifications, etc.), consider extending the script accordingly.

@@ -9,19 +9,17 @@ RUN apk add --no-cache \
     libc6-compat \
     openssl
 
-# Update CA certificates (important for corporate HTTPS)
+# Update CA certificates
 RUN update-ca-certificates
 
 # Set working directory
 WORKDIR /app
 
-# Copy scripts
-COPY auto-merge.sh /app/auto-merge.sh
-COPY delete-branch.sh /app/delete-branch.sh
+# Copy the unified Bitbucket tool
+COPY bb-tool.sh /app/bb-tool.sh
 
-# Make scripts executable
-RUN chmod +x /app/auto-merge.sh \
-    /app/delete-branch.sh
+# Make the script executable
+RUN chmod +x /app/bb-tool.sh
 
-# Default entrypoint (auto-merge)
-ENTRYPOINT ["/app/auto-merge.sh"]
+# Entrypoint
+ENTRYPOINT ["/app/bb-tool.sh"]
