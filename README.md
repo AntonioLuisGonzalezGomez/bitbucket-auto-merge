@@ -27,7 +27,7 @@ Compatible with Atlassian Bitbucket Server v7.21.7.
   - Source branch
   - Target branch
 - Configurable minimum approvals
-- Automatic source branch deletion during merg
+- Automatic source branch deletion during merge
 - Fully Dockerized (portable across environments)
 - Fully configurable via environment variables
 - No host dependencies required (except Docker)
