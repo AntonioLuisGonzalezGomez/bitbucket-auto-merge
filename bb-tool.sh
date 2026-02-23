@@ -72,8 +72,10 @@ delete_branch() {
   if [ -n "$EXISTS" ]; then
     curl -s -u "$AUTH" -X DELETE \
       -H "Content-Type: application/json" \
-      "$BASE_URL/rest/api/latest/projects/$PROJECT/repos/$repo/branches?name=$branch&dryRun=false"
-    echo "Branch '$branch' deleted in $repo."
+      "$BASE_URL/rest/branch-utils/1.0/projects/$PROJECT/repos/$repo/branches" \
+      -d "{\"name\":\"refs/heads/$branch\"}"
+
+    echo ">>>>> ACTION DONE: Branch '$branch' deleted in $repo."
   else
     echo "Branch '$branch' does not exist in $repo."
   fi
