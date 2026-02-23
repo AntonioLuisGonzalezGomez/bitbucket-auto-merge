@@ -4,9 +4,9 @@ A portable and fully configurable Docker-based automation tool that connects to 
 
 Supported operations:
 
-Automatic Pull Request merge
+- Automatic Pull Request merge
 
-Source branch deletion across repositories
+- Source branch deletion across repositories
 
 Designed for enterprise environments where multiple repositories require controlled automation.
 
