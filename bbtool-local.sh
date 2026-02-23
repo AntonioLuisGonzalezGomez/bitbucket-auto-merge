@@ -50,12 +50,12 @@ fi
 # -------- RUN CONTAINER --------
 echo "Running $ACTION on branch $BRANCH inside Docker container ..."
 docker run --rm --network=host \
-  -e BASE_URL \
-  -e PROJECT \
-  -e USERNAME \
-  -e PASSWORD \
-  -e TARGET_BRANCH \
-  -e REPOS \
-  -e MIN_APPROVALS \
+  -e BASE_URL="$BASE_URL" \
+  -e PROJECT="$PROJECT" \
+  -e USERNAME="$USERNAME" \
+  -e PASSWORD="$PASSWORD" \
+  -e TARGET_BRANCH="$TARGET_BRANCH" \
+  -e REPOS="$REPOS" \
+  -e MIN_APPROVALS="$MIN_APPROVALS" \
   --entrypoint /app/bb-tool.sh \
   "$IMAGE_NAME" "$ACTION" "$BRANCH"
