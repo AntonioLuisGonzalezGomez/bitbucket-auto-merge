@@ -89,22 +89,34 @@ generate_report() {
   echo "Repository,Branch,Author,LastCommit,DaysSinceLastCommit,Reason,Case" > "$REPORT_FILE"
 
   for REPO in "${REPO_ARRAY[@]}"; do
+
+    # ------------------------------
+    # Cache PRs once per repo
+    # ------------------------------
+    PR_CACHE=$(curl -s -u "$AUTH" \
+      "$BASE_URL/rest/api/latest/projects/$PROJECT/repos/$REPO/pull-requests?state=ALL&limit=1000")
+
+    # ------------------------------
     # Get all branches
+    # ------------------------------
     BRANCHES=$(curl -s -u "$AUTH" \
       "$BASE_URL/rest/api/latest/projects/$PROJECT/repos/$REPO/branches?limit=1000" \
-      | jq -r '.values[] | .displayId')
+      | jq -r '.values[].displayId')
 
     for BR in $BRANCHES; do
       [ "$BR" == "$TARGET_BRANCH" ] && continue
 
-      # Last commit info
+      # ------------------------------
+      # Last commit
+      # ------------------------------
       LAST_COMMIT_INFO=$(curl -s -u "$AUTH" \
         "$BASE_URL/rest/api/latest/projects/$PROJECT/repos/$REPO/commits?until=$BR&limit=1" \
         | jq -r '.values[0] | "\(.author.name // "N/A"),\(.authorTimestamp // 0)"')
+
       AUTHOR=$(echo "$LAST_COMMIT_INFO" | cut -d',' -f1)
       TIMESTAMP=$(echo "$LAST_COMMIT_INFO" | cut -d',' -f2)
 
-      if [ "$TIMESTAMP" == "0" ] || [ "$TIMESTAMP" == "null" ] || [ -z "$TIMESTAMP" ]; then
+      if [ "$TIMESTAMP" == "0" ] || [ -z "$TIMESTAMP" ]; then
         DAYS_INACTIVE="N/A"
         LAST_COMMIT_DATE="N/A"
       else
@@ -115,60 +127,63 @@ generate_report() {
       fi
 
       # ------------------------------
-      # Get all historical PRs from this branch
+      # PR status from cache
       # ------------------------------
-      PR_INFO=$(curl -s -u "$AUTH" \
-        "$BASE_URL/rest/api/latest/projects/$PROJECT/repos/$REPO/pull-requests?state=ALL&limit=1000" \
-        | jq -r --arg BR "$BR" '[.values[] | select(.fromRef.displayId==$BR)] | .[]? | .state')
+      PR_STATES=$(echo "$PR_CACHE" | jq -r --arg BR "$BR" \
+        '.values[] | select(.fromRef.displayId==$BR) | .state')
 
       PR_MERGED=false
       PR_DECLINED=false
       PR_OPEN=false
 
-      if [ -n "$PR_INFO" ]; then
-        while IFS= read -r STATE; do
-          case "$STATE" in
-            MERGED) PR_MERGED=true ;;
-            DECLINED) PR_DECLINED=true ;;
-            OPEN) PR_OPEN=true ;;
-          esac
-        done <<< "$PR_INFO"
-      fi
+      while IFS= read -r STATE; do
+        case "$STATE" in
+          MERGED) PR_MERGED=true ;;
+          DECLINED) PR_DECLINED=true ;;
+          OPEN) PR_OPEN=true ;;
+        esac
+      done <<< "$PR_STATES"
 
       # ------------------------------
-      # Determine reason and case based on priority
+      # Commits not merged
+      # ------------------------------
+      COMMITS_NOT_IN_TARGET=$(curl -s -u "$AUTH" \
+        "$BASE_URL/rest/api/latest/projects/$PROJECT/repos/$REPO/commits?until=$BR&since=$TARGET_BRANCH&limit=1" \
+        | jq '.size // 0')
+
+      # ------------------------------
+      # Classification
       # ------------------------------
       if [ "$PR_MERGED" = true ]; then
         REASON="PR merged"
         CASE="🔴 MERGED"
+
       elif [ "$PR_DECLINED" = true ]; then
         REASON="PR declined"
         CASE="🟠 PR_DECLINED"
-      else
-        COMMITS_NOT_IN_TARGET=$(curl -s -u "$AUTH" \
-          "$BASE_URL/rest/api/latest/projects/$PROJECT/repos/$REPO/commits?until=$BR&since=$TARGET_BRANCH&limit=1" \
-          | jq '.size // 0')
 
-        if [ "$COMMITS_NOT_IN_TARGET" -eq 0 ]; then
-          REASON="No commits"
-          CASE="🟠 NO_COMMITS"
-        elif [ "$DAYS_INACTIVE" != "N/A" ] && [ "$DAYS_INACTIVE" -ge "$INACTIVE_DAYS" ]; then
-          REASON="Inactive > $INACTIVE_DAYS days"
-          CASE="🟡 INACTIVE"
-        elif [ "$PR_OPEN" = true ]; then
-          REASON="Active PR open"
-          CASE="⚪ No problems"
-        else
-          REASON="No open PR"
-          CASE="🔵 NO_PR"
-        fi
+      elif [ "$COMMITS_NOT_IN_TARGET" -eq 0 ]; then
+        REASON="No commits"
+        CASE="🟠 NO_COMMITS"
+
+      elif [ "$DAYS_INACTIVE" != "N/A" ] && [ "$DAYS_INACTIVE" -ge "$INACTIVE_DAYS" ]; then
+        REASON="Inactive > $INACTIVE_DAYS days"
+        CASE="🟡 INACTIVE"
+
+      elif [ "$PR_OPEN" = true ]; then
+        REASON="Active PR open"
+        CASE="⚪ No problems"
+
+      else
+        REASON="No open PR"
+        CASE="🔵 NO_PR"
       fi
 
       echo "$REPO,$BR,$AUTHOR,$LAST_COMMIT_DATE,$DAYS_INACTIVE,$REASON,$CASE" >> "$REPORT_FILE"
+
     done
   done
 
-  # Automatically generate ranking after report
   generate_ranking
 }
 
